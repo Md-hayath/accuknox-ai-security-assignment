@@ -1,0 +1,12 @@
+services:
+  assignment1:
+    build: .
+    image: accuknox-assignment1:local
+    init: true
+    read_only: true
+    mem_limit: 512m
+    cpus: 1.0
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./assignment1/output:/app/assignment1/output
