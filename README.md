@@ -1,84 +1,80 @@
 # AccuKnox AI Security Engineer — assignments 1 and 2
 
-Assignment 1 is three Python scripts. Assignment 2 is the written answers in `assignment2/answers.md`. Assignment 3 (a project you are proud of, plus three lines on why it was hard) is not in this repo yet.
+This folder is the working copy of the take-home.
 
-The brief allows assumptions if they are written down. Each script states its assumptions at the top. Read those before you change an API URL or a column name.
+Assignment 1 is three separate Python scripts. They fetch books, chart student scores, and load a user CSV. Assignment 2 is the written answer in `assignment2/Assignment_2.pdf`. It does not run. Assignment 3 (one project link, plus three lines on why it was hard) is not in this folder yet.
 
-## Assignment 1 — what each script does
+Each script lists its assumptions at the top of the file.
 
-| Script | Problem it solves | Output |
+## What the scripts do
+
+| Script | What it does | Output |
 | --- | --- | --- |
-| `assignment1/books_to_sqlite.py` | Fetch books (title, author, publication year) from a REST API, store them in SQLite, print them | `assignment1/output/books.db` |
-| `assignment1/scores_to_chart.py` | Fetch student scores from an API, print the average, draw a bar chart | `assignment1/output/student_scores.png` |
-| `assignment1/csv_to_sqlite.py` | Read `name,email` rows from a CSV and insert them into SQLite | `assignment1/output/users.db` |
+| `assignment1/books_to_sqlite.py` | Fetches books from the Open Library Search API and stores title, author, and publication year in SQLite | `assignment1/output/books.db` |
+| `assignment1/scores_to_chart.py` | Fetches student scores, prints the average, and saves a bar chart | `assignment1/output/student_scores.png` |
+| `assignment1/csv_to_sqlite.py` | Reads `name,email` rows from a CSV and inserts them into SQLite | `assignment1/output/users.db` |
 
-Books come from the Open Library Search API (`https://openlibrary.org/search.json`). That call needs a network.
+Books come from `https://openlibrary.org/search.json`. That call needs internet access. A new search replaces the rows already in `books.db`.
 
-The brief does not name a student-scores API. `scores_to_chart.py` GETs JSON of the form `{"students": [{"name", "score"}, ...]}`. With no `--url`, it serves the bundled file `assignment1/data/student_scores.json` on `127.0.0.1` and fetches that URL, so the demo still goes through HTTP. Point `--url` at any API that returns the same shape.
+The brief does not name a student-scores API. With no `--url`, the scores script serves `assignment1/data/student_scores.json` on `127.0.0.1` and fetches that URL. `--url` accepts any endpoint that returns either `{"students": [{"name", "score"}, ...]}` or a bare list of those objects. A score must be a number from 0 to 100.
 
-The user CSV is `assignment1/data/users.csv`.
+The user file is `assignment1/data/users.csv`. Emails are unique. Running the import again skips people who are already in `users.db`, so a second run prints `Inserted: 0`.
 
-## Run on the host
+## Run on your machine
 
-From this directory, with Python 3.11+:
+Use this while you are changing the CSV, the scores file, or the Python. Python 3.11 or newer is required. Only the chart needs the package in `requirements.txt`.
 
-```powershell
+```bash
 pip install -r requirements.txt
-python assignment1/books_to_sqlite.py
-python assignment1/scores_to_chart.py
-python assignment1/csv_to_sqlite.py
-```
-
-Or all three, in that order:
-
-```powershell
 python assignment1/run_all.py
-```
-
-`matplotlib` is only needed for the chart. The other two scripts use the standard library.
-
-## Run in a container
-
-The image runs the same three scripts. Assignment 2 is not in the image. Docker Desktop has to be running. The books script calls Open Library, so the container needs outbound HTTPS.
-
-```powershell
-docker compose build
-docker compose run --rm assignment1
 ```
 
 One script:
 
-```powershell
-docker compose run --rm assignment1 python assignment1/books_to_sqlite.py --limit 5
+```bash
+python assignment1/books_to_sqlite.py --query "harry potter" --limit 5
+python assignment1/scores_to_chart.py
+python assignment1/csv_to_sqlite.py
 ```
 
-Databases and the chart still land in `assignment1/output/` on your machine, because that folder is mounted into the container.
+Other useful arguments:
 
-Useful overrides:
-
-```powershell
+```bash
 python assignment1/books_to_sqlite.py --query "distributed systems" --limit 10
 python assignment1/scores_to_chart.py --url http://127.0.0.1:8000/student_scores.json
 python assignment1/csv_to_sqlite.py --csv assignment1/data/users.csv --db assignment1/output/users.db
 ```
 
-Generated databases and the PNG are written under `assignment1/output/` and are gitignored. Run the scripts again to recreate them.
+The databases and the PNG are written to `assignment1/output/`. That folder is gitignored. Run the scripts again to recreate the files.
 
-## Links the brief also asks for
+To change the chart, edit a score in `assignment1/data/student_scores.json` and run `scores_to_chart.py` again. To add a person, add a `name,email` line to `assignment1/data/users.csv` and run `csv_to_sqlite.py` again.
 
-These are your repositories, not something this repo can invent. Add them before you send the write-up:
+## Run in Docker
 
-- Most complex Python you have written:
-- Most complex database code you have written:
+Docker Desktop has to be running. The container runs the same three scripts. Assignment 2 is not copied into the image.
 
-## Assignment 2
+```bash
+docker compose build
+docker compose run --rm assignment1
+```
 
-Assignment 2 does not run. There is no server, database, or container for it. The brief asks for written answers, sent as a Word document or PDF saved under your name (or a Drive link), with your resume attached.
+One script, without a rebuild:
 
-`assignment2/answers.md` is the draft sitting in this repo so you can edit it. You can leave it here. You do not have to put it in the Docker image, and you should not submit this git repo in place of the document.
+```bash
+docker compose run --rm assignment1 python assignment1/books_to_sqlite.py --query "databases" --limit 3
+```
 
-- Section 1 is the A / B / C self-rating. The cells are empty. Fill them with ratings you can defend in the technical round.
-- Section 2 is the LLM chatbot architecture.
-- Section 3 explains vector databases, defines a security-assistant problem, and selects Qdrant for it.
+`assignment1/output/` is mounted into the container, so `books.db`, `users.db`, and `student_scores.png` show up on your machine.
 
-Export that file to Word or PDF and save it under your name before you send it. Attach your latest resume. The hiring note says a copied chatbot answer can be rejected, so read sections 2 and 3 and rewrite any sentence you would not say out loud in the interview.
+The image copies `assignment1/` at build time. After you edit a script, `users.csv`, or `student_scores.json`, run `docker compose build` again before `docker compose run`. A `--query` or `--limit` change does not need a rebuild.
+
+The books call needs outbound HTTPS from the container. If it fails with `Network is unreachable`, confirm Docker Desktop is running and run the command again.
+
+## Still to add before you send the take-home
+
+- Your A / B / C ratings in section 1 of `assignment2/Assignment_2.pdf`. Those four cells are blank.
+- A link to the most complex Python you have written
+- A link to the most complex database code you have written
+- Assignment 3: one project link, and three lines on why it was hard
+
+Put the finished repo on GitHub and paste that link in the form. The form also asks for a resume whose link anyone can view, and a 4-minute video on Google Drive with the same access.
